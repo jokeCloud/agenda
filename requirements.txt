@@ -1,5 +1,6 @@
 autopep8==2.0.0
 Django==2.2.3
+django-jazzmin==2.6.0
 flake8==6.0.0
 mccabe==0.7.0
 mypy==0.991
