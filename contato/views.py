@@ -1,11 +1,15 @@
+from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db.models import Q, Value
+from django.db.models.functions import Concat
 from django.http import Http404
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from .models import Contato
 
-
 # Create your views here.
+
+
 def index(request):
     contatos = Contato.objects.order_by('-id').filter(
         mostrar=True
@@ -34,9 +38,20 @@ def ver_contato(request, contato_id):
 def busca(request):
     termo = request.GET.get('termo')
 
-    contatos = Contato.objects.order_by('-id').filter(
-        nome__icontains=termo,
-        mostrar=True
+    if termo is None or not termo:
+        messages.add_message(
+            request,
+            messages.ERROR,
+            '"Digite sua pesquisa" não pode ficar em branco.'
+        )
+        return redirect('index')
+
+    campos = Concat('nome', Value(' '), 'sobrenome')
+
+    contatos = Contato.objects.annotate(
+        nome_completo=campos
+    ).filter(
+        Q(nome_completo__icontains=termo) | Q(telefone__icontains=termo)
     )
     paginator = Paginator(contatos, 10)
 
